@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_05_100000) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_11_133000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -38,6 +38,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_05_100000) do
     t.index ["scraped_at"], name: "index_documents_on_scraped_at"
   end
 
+  create_table "plans", force: :cascade do |t|
+    t.string "name"
+    t.integer "daily_search_limit", default: 100, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "price_cents", default: 0
+    t.string "interval"
+    t.integer "monthly_search_limit"
+    t.string "stripe_price_id"
+    t.string "stripe_product_id"
+  end
+
   create_table "search_results", force: :cascade do |t|
     t.bigint "search_id", null: false
     t.bigint "document_id", null: false
@@ -61,8 +73,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_05_100000) do
     t.text "error_message"
     t.integer "expected_documents_count"
     t.vector "query_embedding", limit: 1536
+    t.bigint "user_id"
     t.index ["status", "updated_at"], name: "index_searches_on_status_and_updated_at"
     t.index ["status"], name: "index_searches_on_status"
+    t.index ["user_id"], name: "index_searches_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -186,13 +200,44 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_05_100000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "subscriptions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "plan_id", null: false
+    t.string "status"
+    t.string "billing_id"
+    t.datetime "current_period_end"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "cancel_at_period_end", default: false, null: false
+    t.datetime "current_period_start"
+    t.index ["plan_id"], name: "index_subscriptions_on_plan_id"
+    t.index ["user_id"], name: "index_subscriptions_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.string "stripe_customer_id"
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["stripe_customer_id"], name: "index_users_on_stripe_customer_id", unique: true, where: "(stripe_customer_id IS NOT NULL)"
+  end
+
   add_foreign_key "citations", "search_results"
   add_foreign_key "search_results", "documents"
   add_foreign_key "search_results", "searches"
+  add_foreign_key "searches", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "subscriptions", "plans"
+  add_foreign_key "subscriptions", "users"
 end
