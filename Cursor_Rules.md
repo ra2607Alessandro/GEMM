@@ -1,4 +1,4 @@
-# Cursor Rules for AI-Powered Search Assistant
+ # Cursor Rules for AI-Powered Search Assistant
 
 ## Project Overview
 This is a Rails 8 application that builds an AI-powered search assistant similar to Perplexity. The system performs semantic search using vector embeddings with PostgreSQL + pgvector, providing natural language responses with proper citations grounded in real web content.
