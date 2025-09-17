@@ -51,7 +51,7 @@ And that's exactly what the draft of this project is meant to start.
 
 Thanks for everyone who is visiting this repository. 
 
-If you believe that this project and the premise upon which is built don't esitate in leaving a star and contacting me. 
+If you believe in this project and the premise upon which is built, don't hesitate in leaving a star and contacting me. 
 
 
 ### License
